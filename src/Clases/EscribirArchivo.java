@@ -2,6 +2,7 @@ package Clases;
 
 import java.io.*;//no olviden importar esta librería al inicio de su programa 
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JOptionPane;
 
@@ -46,6 +47,36 @@ public class EscribirArchivo {
 
 
 	  } 
+	 public int escribirLista(String RutaAlArchivo,List lista ) { 		 
+			int lineasTotalesEscritas=0;
+
+			 File f; 
+			 f = new File(RutaAlArchivo);   
+
+
+			 
+			 try{ 
+			 FileWriter w = new FileWriter(f);
+			 
+			 BufferedWriter bw = new BufferedWriter(w); 
+			
+			 for(int i=0;i<lista.size();i++){
+			 bw.write(lista.get(i).toString());
+			 bw.newLine();
+			 lineasTotalesEscritas++;
+			  }
+			 
+			 bw.close(); 
+
+
+			 }catch(IOException e){
+				 JOptionPane.showConfirmDialog(null,"Error "+e.getMessage());
+			 };
+			return lineasTotalesEscritas; 
+
+
+			  } 
+
 
 
 
