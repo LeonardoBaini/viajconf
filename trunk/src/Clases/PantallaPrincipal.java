@@ -27,6 +27,8 @@ import javax.swing.JToggleButton;
 import javax.swing.JRadioButton;
 import javax.swing.JCheckBox;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class PantallaPrincipal extends JFrame {
@@ -59,6 +61,7 @@ public class PantallaPrincipal extends JFrame {
 	private JCheckBox jCheckBoxAmbos = null;
 	private JCheckBox jCheckBoxConcesionario = null;
 	private JCheckBox jCheckBoxSucursal = null;
+	private JLabel LogTXT = null;
 	/**
 	 * This is the default constructor
 	 */
@@ -89,6 +92,10 @@ public class PantallaPrincipal extends JFrame {
 	private JPanel getJContentPane() {
 		if (jContentPane == null) {
 		
+			LogTXT = new JLabel();
+			LogTXT.setBounds(new Rectangle(13, 166, 106, 16));
+			LogTXT.setText("");
+			LogTXT.setForeground(Color.white);
 			jLabel4122 = new JLabel();
 			jLabel4122.setBounds(new Rectangle(168, 131, 105, 19));
 			jLabel4122.setText("AMBOS");
@@ -167,6 +174,7 @@ public class PantallaPrincipal extends JFrame {
 			jContentPane.add(getJCheckBoxAmbos(), null);
 			jContentPane.add(getJCheckBoxConcesionario(), null);
 			jContentPane.add(getJCheckBoxSucursal(), null);
+			jContentPane.add(LogTXT, null);
 		}
 		return jContentPane;
 	}
@@ -208,7 +216,7 @@ public class PantallaPrincipal extends JFrame {
 		if (jTextFieldRuta == null) {
 			jTextFieldRuta = new JTextField();
 			jTextFieldRuta.setBounds(new Rectangle(400, 13, 728, 20));
-			jTextFieldRuta.setText("Ejemplo: D:\\Desktop\\VIAJECONF.txt");
+			jTextFieldRuta.setText("D:\\Desktop\\VIAJCONF.txt");
 			LineBorder thickBorder = new LineBorder(Color.green,2);
 			jTextFieldRuta.setBorder(thickBorder);
 			jTextFieldRuta.setBackground(Color.white);
@@ -221,6 +229,42 @@ public class PantallaPrincipal extends JFrame {
 	 * 	
 	 * @return javax.swing.JButton	
 	 */
+	private ArrayList<String>dividirArchivos(String rutaOrigen,String rutaDestino,int cantMaxRegistrosAleer){
+		LeerArchivo leer=new LeerArchivo();
+		ArrayList<String>nuevosArchivos = new ArrayList<String>();
+		ArrayList<String>auxiliar;
+		auxiliar=leer.leer(rutaOrigen);//Defino la ruta de origen
+		EscribirArchivo escritor=new EscribirArchivo();
+		System.out.println(auxiliar.size());
+		List<String> nuevoArchivo;		
+		String nombreArch=rutaOrigen.substring(rutaOrigen.lastIndexOf("\\"));
+		nombreArch=nombreArch.replaceAll(".TXT","");
+			
+			System.out.println("Finishh");
+			int cantMax=cantMaxRegistrosAleer;// Defino la cantidad máxima de registros soportados por la pc
+			int partes=auxiliar.size()/cantMax;
+		System.out.println(partes);
+		System.out.println("Fin deberia ser "+auxiliar.size());
+		int desde=0;
+		int hasta=0;
+		//String rutaDestino="D:\\Desktop\\pruebaDivide\\VIAJCONF";// Defino el destino
+		for(int i=1;i<partes+1;i++){
+			hasta=cantMax*i;
+			System.out.println("va desde "+desde+" hasta "+hasta);
+			nuevoArchivo=auxiliar.subList(desde, hasta);
+			escritor.escribirLista(rutaDestino+"\\"+nombreArch+i+".txt", nuevoArchivo);//Cada archichivo de va a llamar igual pero con un nro adelante
+			nuevosArchivos.add(rutaDestino+"\\"+nombreArch+i+".txt");// hasta cantMax de archivos a escribir.
+			desde=hasta;
+			
+			if(i==partes){
+				System.out.println("va desde "+desde+" hasta "+auxiliar.size());
+				nuevoArchivo=auxiliar.subList(desde, auxiliar.size());
+				escritor.escribirLista(rutaDestino+"\\"+nombreArch+i+".txt", nuevoArchivo);
+				nuevosArchivos.add(rutaDestino+"\\"+nombreArch+i+".txt");
+			}
+		}
+		return nuevosArchivos;
+	}
 	private JButton getJButtonProcesar() {
 		if (jButtonProcesar == null) {
 			jButtonProcesar = new JButton();
@@ -232,33 +276,52 @@ public class PantallaPrincipal extends JFrame {
 			LineBorder thickBorder = new LineBorder(Color.green,2);
 			jButtonProcesar.setBorder(thickBorder);
 			jButtonProcesar.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-				try{
-				jTextAreaLog.setText("");
-				
-				
-				String filtro=null;
-				if(jCheckBoxAmbos.isSelected()){
-					filtro="AMBOS";
-				}else if (jCheckBoxConcesionario.isSelected()){
-					filtro="CONCESIONARIO";
-				}else if(jCheckBoxSucursal.isSelected()){
-					filtro="SUCURSAL";
-				}
-				jButtonProcesar.setEnabled(false);
-				Runnable lector=new Implementador(jTextAreaLog,jProgressBar,jProgressBarBase,jProgressBarDatos,jTextFieldRuta.getText(),jTextFieldRutaOrigen.getText(),jTextFieldRutaDestino.getText(),jButtonExaminar,jButtonProcesar,filtro);				
-				new Thread(lector).start();//.start();
-				
-								
-				}catch(Exception e1){
-					JOptionPane.showMessageDialog(null,e1.getMessage()+" \n Saliendo del programa.");
-					System.exit(0);
-				}
-				
-
-				}
-			});
-		}
+				public void actionPerformed(java.awt.event.ActionEvent e) {	
+					
+					try{
+						jTextAreaLog.setText("");
+						
+						
+						String filtro=null;
+						if(jCheckBoxAmbos.isSelected()){
+							filtro="AMBOS";
+						}else if (jCheckBoxConcesionario.isSelected()){
+							filtro="CONCESIONARIO";
+						}else if(jCheckBoxSucursal.isSelected()){
+							filtro="SUCURSAL";
+						}
+						
+						ArrayList<String>nuevosarchivos=dividirArchivos(jTextFieldRuta.getText(), jTextFieldRutaDestino.getText(), 1000);
+						
+						jButtonProcesar.setEnabled(false);
+						int j=0;
+						
+						Thread tarea = null;
+						
+						Implementador lector = null;					
+							
+							lector=new Implementador(jTextAreaLog,jProgressBar,jProgressBarBase,jProgressBarDatos,nuevosarchivos,jTextFieldRutaOrigen.getText(),jTextFieldRutaDestino.getText(),jButtonExaminar,jButtonProcesar,filtro,LogTXT);
+							tarea=new Thread(lector);
+							j++;
+							tarea.start();
+							
+							
+						
+							
+						
+						//	Runnable lector=new Implementador(jTextAreaLog,jProgressBar,jProgressBarBase,jProgressBarDatos,nuevosarchivos.get(i),jTextFieldRutaOrigen.getText(),jTextFieldRutaDestino.getText(),jButtonExaminar,jButtonProcesar,filtro);				
+						
+					//	new Thread(lector).start();//.start();
+						
+						
+						
+										
+						}catch(Exception e1){
+							JOptionPane.showMessageDialog(null,e1.getMessage()+" \n Saliendo del programa.");
+							System.exit(0);
+						}
+				}});}
+		
 		return jButtonProcesar;
 	}
 
@@ -382,7 +445,7 @@ public class PantallaPrincipal extends JFrame {
 			jTextFieldRutaOrigen = new JTextField();
 			jTextFieldRutaOrigen.setBounds(new Rectangle(400, 55, 728, 20));
 			jTextFieldRutaOrigen.setBorder(new LineBorder(Color.green, 2));
-			jTextFieldRutaOrigen.setText("Ejemplo: H:\\Documentos Digitalizados");
+			jTextFieldRutaOrigen.setText("D:\\Desktop\\DropBoxII");
 			jTextFieldRutaOrigen.setBackground(Color.white);
 		}
 		return jTextFieldRutaOrigen;
@@ -423,7 +486,7 @@ public class PantallaPrincipal extends JFrame {
 		if (jTextFieldRutaDestino == null) {
 			jTextFieldRutaDestino = new JTextField();
 			jTextFieldRutaDestino.setBorder(new LineBorder(Color.green, 2));
-			jTextFieldRutaDestino.setText("Ejemplo: H:\\DocumentosFiltrados");
+			jTextFieldRutaDestino.setText("D:\\Desktop\\PruebaDivide");
 			jTextFieldRutaDestino.setBounds(new Rectangle(400, 97, 728, 20));
 			jTextFieldRutaDestino.setBackground(Color.white);
 		}

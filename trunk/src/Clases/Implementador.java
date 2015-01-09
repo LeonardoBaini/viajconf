@@ -7,9 +7,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
 import javax.swing.JTextArea;
+
+import com.mysql.jdbc.log.Log;
 
 
 
@@ -18,17 +21,18 @@ public class Implementador implements Runnable{
 	JProgressBar bar;
 	JProgressBar barQuery;
 	JTextArea area;
-	String ruta;
+	ArrayList<String> ruta;
 	String rutaOrigen;
 	String rutaDestino;
 	JButton buttonExaminar;
 	JButton buttonProcesar;
+	JLabel LogTXT;
 	
 	String filtro;
-	public Implementador(JTextArea area,JProgressBar bar,JProgressBar barQuery,JProgressBar barCopia,String ruta,String rutaOrigen, String rutaDestino, JButton buttonExaminar, JButton buttonProcesar,String filtro){
+	public Implementador(JTextArea area,JProgressBar bar,JProgressBar barQuery,JProgressBar barCopia,ArrayList<String> nuevosarchivos,String rutaOrigen, String rutaDestino, JButton buttonExaminar, JButton buttonProcesar,String filtro, JLabel logTXT){
 		this.bar=bar;
 		this.area=area;
-		this.ruta=ruta;
+		this.ruta=nuevosarchivos;
 		this.barQuery=barQuery;
 		this.barCopia=barCopia;
 		this.buttonExaminar=buttonExaminar;
@@ -36,12 +40,16 @@ public class Implementador implements Runnable{
 		this.rutaOrigen=rutaOrigen;
 		this.rutaDestino=rutaDestino;
 		this.filtro=filtro;
+		this.LogTXT=logTXT;
 	}
 
 	public void habilitarBotones(){
 		//this.buttonExaminar.setEnabled(true);
 		this.buttonProcesar.setEnabled(true);
 	}
+	
+	
+	
 	private ArrayList<String> hacerBusquedaResponsableConformado(String viajeConfTXT,String logNoOkTXT,String resBusquedaTXT,JProgressBar progressBar,JProgressBar progressBarBase,JTextArea textAreaLog){
 		ArrayList<String>personas=new ArrayList<String>();
 		ArrayList<String>lineasViajeConf;
@@ -164,6 +172,7 @@ public class Implementador implements Runnable{
          tiempo = TFin - TInicio; //Calculamos los milisegundos de diferencia
          textAreaLog.append("Tiempo de ejecución de filtrado de conformes: " + tiempo/1000+" Segundos\n");
 		return personas;
+		
          
 
 	}
@@ -183,13 +192,19 @@ public class Implementador implements Runnable{
 		
 	}
 	
-	
+	int j=0;
 	public void run() {
+		area.setDragEnabled(true);
+		LogTXT.setText("Proc "+(j+1)+" de "+(ruta.size()-1));
+		bar.setValue(0);
+		barQuery.setValue(0);
+		barCopia.setValue(0);
 		
 		//leer archivo
 		LeerArchivo lector=new LeerArchivo();
 		ArrayList<String>lineasViajeConf;
-		lineasViajeConf=lector.leer(ruta);
+		lineasViajeConf=lector.leer(ruta.get(j));
+		j++;
 		ArrayList<Integer>pipe=entregarUbicacionPipes(lineasViajeConf, area);
 		
 		String chasis=null;
@@ -201,14 +216,14 @@ public class Implementador implements Runnable{
 		 bar.setBorderPainted(true);			 
 		 area.setAutoscrolls(true);
 			ArrayList<String>contenido=new ArrayList<String>();
-			int j=0;
+			int indiceXXX=0;
 			try{
 			 
 				
 				 
 				 if(filtro.equals("AMBOS")){
 					 for(int i=0;i<lineasViajeConf.size();i++){   
-					 j=i;										//linea 209         a    226
+					 indiceXXX=i;										//linea 209         a    226
 						chasis=lineasViajeConf.get(i).substring(pipe.get(pipe.size()-2)+1, pipe.get(pipe.size()-1));
 						area.append("LEYENDO "+lineasViajeConf.get(i)+"\n");
 						contenido.add(chasis) ;
@@ -216,7 +231,7 @@ public class Implementador implements Runnable{
 					 
 				 }else if(filtro.equals("CONCESIONARIO")){
 					 for(int i=0;i<lineasViajeConf.size();i++){
-					 j=i;	
+					 indiceXXX=i;	
 					 resFiltro=lineasViajeConf.get(i).substring(pipe.get(8)+1, pipe.get(9));
 					 if(resFiltro.equals("C")){
 					 //linea 209         a    226
@@ -229,7 +244,7 @@ public class Implementador implements Runnable{
 					 
 				 }else if(filtro.equals("SUCURSAL")){
 					 for(int i=0;i<lineasViajeConf.size();i++){
-					 j=i;
+					 indiceXXX=i;
 					 resFiltro=lineasViajeConf.get(i).substring(pipe.get(8)+1, pipe.get(9));
 					 if(resFiltro.equals("S")){                  //linea 209         a    226
 						chasis=lineasViajeConf.get(i).substring(pipe.get(pipe.size()-2)+1, pipe.get(pipe.size()-1));
@@ -243,7 +258,7 @@ public class Implementador implements Runnable{
 				 }
 			 
 			}catch(Exception e){
-				JOptionPane.showMessageDialog(null,"Error en el archivo origen en la linea "+j+" está vacía o es más corta que la anterior, corríjala y luego reintente \n"+e.getLocalizedMessage());
+				JOptionPane.showMessageDialog(null,"Error en el archivo origen en la linea "+indiceXXX+" está vacía o es más corta que la anterior, corríjala y luego reintente \n"+e.getLocalizedMessage());
 				System.exit(0);
 			}
 			
@@ -307,23 +322,41 @@ public class Implementador implements Runnable{
 		ArrayList<String>persona=null;
 			
 			// ACA PONER FUNCION DE BÚSQUEDA FINAL
-		persona=hacerBusquedaResponsableConformado(ruta, rutaDestino+"\\logNoOk.txt", rutaDestino+"\\INFORME_FINAL.txt", barQuery, barCopia, area);
+		persona=hacerBusquedaResponsableConformado(ruta.get(j), rutaDestino+"\\logNoOk.txt", rutaDestino+"\\INFORME_FINAL.txt", barQuery, barCopia, area);
 		
 		rutaDestino=rutaDestino.replace('/','\\');
 		
-		for(int i=0;i<persona.size();i++){
+		for(int i=0;i<persona.size();i++){//generando .bat filtrador
 			//find "AMANDAT" d:\desktop\viajconf.txt  > d:\desktop\AMANDAT.txt
 			
 			persona.set(i,"find \""+persona.get(i).replaceAll(" ", "")+"\""+" \""+rutaDestino+"\\INFORME_FINAL.txt\" > \""+rutaDestino+"\\"+persona.get(i).replaceAll(" ", "")+".txt\"");
 		}
+		
 		EscribirArchivo escritor=new EscribirArchivo();
 		escritor.escribir(rutaDestino+"\\FILTRADOR.bat", persona);
 		
+		////////////////////////////////////////////////LIBERAR MEMORIA///////////////////////////////////////////////
+		area.setText("");
+		persona=null;
+		rutasCompletas=null;
+		rutasArchivos=null;
+		extension=null;
+		pipe=null;
+		lineasViajeConf=null;
+		System.gc();// llamando al garbage collector..
+		
+		
+		
+		
+		if(j+1==ruta.size()-1){
 		JOptionPane.showMessageDialog(null,"Proceso finalizado.\nPara más detalles, vea el LOG en "+rutaDestino);//su Carpeta de Destino.");
+		ini.abrirDirectorio(rutaDestino);
+		}{
+			run();
+		}
 			
-			ini.abrirDirectorio(rutaDestino);
 		}catch(Exception e){
-			
+			JOptionPane.showMessageDialog(null,"No se puede abrir el directorio\n"+e.getMessage());
 		}
 		
 		
