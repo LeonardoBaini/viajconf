@@ -80,7 +80,7 @@ public class PantallaPrincipal extends JFrame {
 		this.setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/Imagenes/F_DE_FURLONG.png")));
 		
 		this.setContentPane(getJContentPane());
-		this.setTitle("Filtrador de documentación (con cruce de conformados).                                                                                                                                                                                  V 1.0");
+		this.setTitle("Filtrador de documentación (con cruce de conformados).                                                                                                                                                                                  V 2.2");
 		//this.setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/Imagenes/Camiones.jpg")));
 	}
 
@@ -231,15 +231,19 @@ public class PantallaPrincipal extends JFrame {
 	 */
 	private ArrayList<String>dividirArchivos(String rutaOrigen,String rutaDestino,int cantMaxRegistrosAleer){
 		LeerArchivo leer=new LeerArchivo();
-		ArrayList<String>nuevosArchivos = new ArrayList<String>();
+		ArrayList<String>nuevosArchivos = null;
 		ArrayList<String>auxiliar;
 		auxiliar=leer.leer(rutaOrigen);//Defino la ruta de origen
+		
+		if(cantMaxRegistrosAleer<auxiliar.size()){//si hay que dividir hacemos division
+		nuevosArchivos= new ArrayList<String>();
 		EscribirArchivo escritor=new EscribirArchivo();
 		System.out.println(auxiliar.size());
 		List<String> nuevoArchivo;		
 		String nombreArch=rutaOrigen.substring(rutaOrigen.lastIndexOf("\\"));
-		nombreArch=nombreArch.replaceAll(".TXT","");
-			
+		nombreArch=nombreArch.replaceAll(".txt","");
+		nombreArch=nombreArch.substring((nombreArch.lastIndexOf("\\")+1));
+		
 			System.out.println("Finishh");
 			int cantMax=cantMaxRegistrosAleer;// Defino la cantidad máxima de registros soportados por la pc
 			int partes=auxiliar.size()/cantMax;
@@ -261,7 +265,9 @@ public class PantallaPrincipal extends JFrame {
 				nuevoArchivo=auxiliar.subList(desde, auxiliar.size());
 				escritor.escribirLista(rutaDestino+"\\"+nombreArch+i+".txt", nuevoArchivo);
 				nuevosArchivos.add(rutaDestino+"\\"+nombreArch+i+".txt");
+				return nuevosArchivos;
 			}
+		}
 		}
 		return nuevosArchivos;
 	}
@@ -291,19 +297,29 @@ public class PantallaPrincipal extends JFrame {
 							filtro="SUCURSAL";
 						}
 						
-						ArrayList<String>nuevosarchivos=dividirArchivos(jTextFieldRuta.getText(), jTextFieldRutaDestino.getText(), 1000);
+						ArrayList<String>nuevosarchivos=dividirArchivos(jTextFieldRuta.getText(), jTextFieldRutaDestino.getText(), 500);
 						
 						jButtonProcesar.setEnabled(false);
-						int j=0;
+						
 						
 						Thread tarea = null;
 						
-						Implementador lector = null;					
+						Implementador lector = null;		
+						
+						if(nuevosarchivos!=null){
 							
-							lector=new Implementador(jTextAreaLog,jProgressBar,jProgressBarBase,jProgressBarDatos,nuevosarchivos,jTextFieldRutaOrigen.getText(),jTextFieldRutaDestino.getText(),jButtonExaminar,jButtonProcesar,filtro,LogTXT);
+							lector=new Implementador(jTextAreaLog,jProgressBar,jProgressBarBase,jProgressBarDatos,nuevosarchivos,jTextFieldRutaOrigen.getText(),jTextFieldRutaDestino.getText(),jButtonExaminar,jButtonProcesar,filtro,LogTXT,jTextFieldRuta.getText());
 							tarea=new Thread(lector);
-							j++;
+							
 							tarea.start();
+						}else{
+							nuevosarchivos=new ArrayList<String>();
+							nuevosarchivos.add(jTextFieldRuta.getText());
+							lector=new Implementador(jTextAreaLog,jProgressBar,jProgressBarBase,jProgressBarDatos,nuevosarchivos,jTextFieldRutaOrigen.getText(),jTextFieldRutaDestino.getText(),jButtonExaminar,jButtonProcesar,filtro,LogTXT,jTextFieldRuta.getText());
+							tarea=new Thread(lector);
+							tarea.start();
+							
+						}
 							
 							
 						
@@ -445,7 +461,7 @@ public class PantallaPrincipal extends JFrame {
 			jTextFieldRutaOrigen = new JTextField();
 			jTextFieldRutaOrigen.setBounds(new Rectangle(400, 55, 728, 20));
 			jTextFieldRutaOrigen.setBorder(new LineBorder(Color.green, 2));
-			jTextFieldRutaOrigen.setText("D:\\Desktop\\DropBoxII");
+			jTextFieldRutaOrigen.setText("D:\\Desktop\\Documentos Digitalizados");
 			jTextFieldRutaOrigen.setBackground(Color.white);
 		}
 		return jTextFieldRutaOrigen;
@@ -486,7 +502,7 @@ public class PantallaPrincipal extends JFrame {
 		if (jTextFieldRutaDestino == null) {
 			jTextFieldRutaDestino = new JTextField();
 			jTextFieldRutaDestino.setBorder(new LineBorder(Color.green, 2));
-			jTextFieldRutaDestino.setText("D:\\Desktop\\PruebaDivide");
+			jTextFieldRutaDestino.setText("D:\\Desktop\\Destino de los archivos");
 			jTextFieldRutaDestino.setBounds(new Rectangle(400, 97, 728, 20));
 			jTextFieldRutaDestino.setBackground(Color.white);
 		}

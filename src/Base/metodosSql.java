@@ -65,7 +65,7 @@ public class metodosSql extends ConexionMySql {
         
         if(Arrays.toString(script).equals("1")){//si está iniciado
         	Process process1 = runtime.exec(script2);//para servicio
-        	Thread.sleep(1000);//espera un segundo
+        	Thread.sleep(3000);//espera 3 segundos
         	Process process2 = runtime.exec(script1);//inicia el servicio
         }else{
         	Process process3 = runtime.exec(script1);//inicia el servicio

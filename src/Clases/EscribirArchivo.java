@@ -18,20 +18,29 @@ public class EscribirArchivo {
 /*
  * escribir sobre escribe el archivo dado
  */
+	
+	/*Para escribir a continuación hacer:
+	 * try 
+    {
+            BufferedWriter out = new BufferedWriter(new FileWriter(RutaAlArchivo, true));
+            
+            out.write(linea);
+            out.newLine();
+            
+            out.close();
+    }
+	 */
 	 public int escribir(String RutaAlArchivo,ArrayList<String> lista ) { 		 
 	int lineasTotalesEscritas=0;
 
-	 File f; 
-	 f = new File(RutaAlArchivo);   
-
-
-	 
+		 
 	 try{ 
-	 FileWriter w = new FileWriter(f);
 	 
-	 BufferedWriter bw = new BufferedWriter(w); 
+	 
+	 BufferedWriter bw = new BufferedWriter(new FileWriter(RutaAlArchivo, true)); 
 	
 	 for(int i=0;i<lista.size();i++){
+	
 	 bw.write(lista.get(i));
 	 bw.newLine();
 	 lineasTotalesEscritas++;
@@ -50,15 +59,15 @@ public class EscribirArchivo {
 	 public int escribirLista(String RutaAlArchivo,List lista ) { 		 
 			int lineasTotalesEscritas=0;
 
-			 File f; 
-			 f = new File(RutaAlArchivo);   
+			 
 
 
 			 
 			 try{ 
-			 FileWriter w = new FileWriter(f);
+			
 			 
-			 BufferedWriter bw = new BufferedWriter(w); 
+			
+			 BufferedWriter bw = new BufferedWriter(new FileWriter(RutaAlArchivo, true)); 
 			
 			 for(int i=0;i<lista.size();i++){
 			 bw.write(lista.get(i).toString());
@@ -83,14 +92,13 @@ public class EscribirArchivo {
 public void escribirUnaLinea(String RutaAlArchivo,String linea ) { 		 
 	 
 
-	 File f; 
-	 f = new File(RutaAlArchivo);   
-
+	
 
 	
 	 try{ 
-	 FileWriter w = new FileWriter(f);
-	 BufferedWriter bw = new BufferedWriter(w); 
+	
+	 BufferedWriter bw = new BufferedWriter(new FileWriter(RutaAlArchivo, true)); 
+	 
 	 bw.write(linea);
 	 bw.close(); 
 
