@@ -7,12 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
 import javax.swing.JTextArea;
-
-import com.mysql.jdbc.log.Log;
 
 
 
@@ -21,18 +18,17 @@ public class Implementador implements Runnable{
 	JProgressBar bar;
 	JProgressBar barQuery;
 	JTextArea area;
-	ArrayList<String> ruta;
+	String ruta;
 	String rutaOrigen;
 	String rutaDestino;
 	JButton buttonExaminar;
 	JButton buttonProcesar;
-	JLabel LogTXT;
-	String rutaOriginalAlviajconfTXT;
+	
 	String filtro;
-	public Implementador(JTextArea area,JProgressBar bar,JProgressBar barQuery,JProgressBar barCopia,ArrayList<String> nuevosarchivos,String rutaOrigen, String rutaDestino, JButton buttonExaminar, JButton buttonProcesar,String filtro, JLabel logTXT, String rutaOriginalAlviajconfTXT){
+	public Implementador(JTextArea area,JProgressBar bar,JProgressBar barQuery,JProgressBar barCopia,String ruta,String rutaOrigen, String rutaDestino, JButton buttonExaminar, JButton buttonProcesar,String filtro){
 		this.bar=bar;
 		this.area=area;
-		this.ruta=nuevosarchivos;
+		this.ruta=ruta;
 		this.barQuery=barQuery;
 		this.barCopia=barCopia;
 		this.buttonExaminar=buttonExaminar;
@@ -40,17 +36,23 @@ public class Implementador implements Runnable{
 		this.rutaOrigen=rutaOrigen;
 		this.rutaDestino=rutaDestino;
 		this.filtro=filtro;
-		this.LogTXT=logTXT;
-		this.rutaOriginalAlviajconfTXT=rutaOriginalAlviajconfTXT;
 	}
 
 	public void habilitarBotones(){
 		//this.buttonExaminar.setEnabled(true);
 		this.buttonProcesar.setEnabled(true);
 	}
-	
-	
-	
+	/**
+	 * modif 23/03/2015 que filtre por selección inicial al buscar responsables no conf
+	 * @param viajeConfTXT
+	 * @param logNoOkTXT
+	 * @param resBusquedaTXT
+	 * @param progressBar
+	 * @param progressBarBase
+	 * @param textAreaLog
+	 * @param resFiltro CONCESIONARIO,SUCURSAL,AMBOS
+	 * @return
+	 */
 	private ArrayList<String> hacerBusquedaResponsableConformado(String viajeConfTXT,String logNoOkTXT,String resBusquedaTXT,JProgressBar progressBar,JProgressBar progressBarBase,JTextArea textAreaLog){
 		ArrayList<String>personas=new ArrayList<String>();
 		ArrayList<String>lineasViajeConf;
@@ -58,7 +60,9 @@ public class Implementador implements Runnable{
 		EscribirArchivo escritor=new EscribirArchivo();
 		
 		ArrayList<String>responsables=new ArrayList<String>();
-		
+		responsables.add("Reclame los siguientes conformados a los siguientes usuarios-");
+		responsables.add("-------------------------------------------------------------");
+		responsables.add("CHASIS\t\t\tUSUARIO DE AS400");
 		LeerArchivo lector=new LeerArchivo();
 		lineasViajeConf=lector.leer(viajeConfTXT);
 		lineasLogNoOk=lector.leer(logNoOkTXT);
@@ -93,10 +97,37 @@ public class Implementador implements Runnable{
 		int flagLeidoSeparador=0;
 		textAreaLog.append("LEYENDO\t\t"+lineasViajeConf.size()+" registros"+"\n");
 		 textAreaLog.append("GENERANDO INDICES\t\t\n");
+		 
 		for(int i=0;i<lineasViajeConf.size();i++){
 			
-			persona=lineasViajeConf.get(i).substring(pipe.get(pipe.size()-3)+1, pipe.get(pipe.size()-2));
-			chasis=lineasViajeConf.get(i).substring(pipe.get(pipe.size()-2)+1, pipe.get(pipe.size()-1));
+			if(filtro.equals("AMBOS")){
+				persona=lineasViajeConf.get(i).substring(pipe.get(pipe.size()-3)+1, pipe.get(pipe.size()-2));
+				chasis=lineasViajeConf.get(i).substring(pipe.get(pipe.size()-2)+1, pipe.get(pipe.size()-1));
+				mapaDeConformes.put(chasis, persona);
+				textAreaLog.append("ASOCIANDO\t"+chasis+"\tcon\t"+persona+"\t\tS/FILTRO\n");
+				
+			}else if(filtro.equals("CONCESIONARIO")){
+				   
+				if(lineasViajeConf.get(i).substring(pipe.get(8)+1, pipe.get(9)).equals("C")){
+				
+				persona=lineasViajeConf.get(i).substring(pipe.get(pipe.size()-3)+1, pipe.get(pipe.size()-2));
+				chasis=lineasViajeConf.get(i).substring(pipe.get(pipe.size()-2)+1, pipe.get(pipe.size()-1));
+				mapaDeConformes.put(chasis, persona);
+				textAreaLog.append("ASOCIANDO\t"+chasis+"\tcon\t"+persona+"\t\tCONCESIONARIO\n");
+				}
+				
+			}else if(filtro.equals("SUCURSAL")){
+				if(lineasViajeConf.get(i).substring(pipe.get(8)+1, pipe.get(9)).equals("S")){
+				persona=lineasViajeConf.get(i).substring(pipe.get(pipe.size()-3)+1, pipe.get(pipe.size()-2));
+				chasis=lineasViajeConf.get(i).substring(pipe.get(pipe.size()-2)+1, pipe.get(pipe.size()-1));
+				mapaDeConformes.put(chasis, persona);
+				textAreaLog.append("ASOCIANDO\t"+chasis+"\tcon\t"+persona+"\t\tSUCURSAL\n");
+				}
+			}
+			//nuevo agregado para filtrar persona en func de seleccion inicial
+			
+			
+			
 			
 			
 			
@@ -111,9 +142,8 @@ public class Implementador implements Runnable{
 			/*acá está asociando chasis con persona, tomando datos de viajeconf.txt
 			 * 
 			 */
-			//no voy a cargar espacios si los hubiera
-			 mapaDeConformes.put(chasis, persona);
-			 textAreaLog.append("ASOCIANDO\t"+chasis+"\tcon\t"+persona+"\t\t\n");
+			
+			
 			
 		}
 
@@ -140,9 +170,8 @@ public class Implementador implements Runnable{
     		  chasisBuscar=null;
     	   }
     	   // ES EL USUARIO QUE ESTÁ EN VIAJECONF
-    
         conformador=mapaDeConformes.get(chasisBuscar);
-        if(conformador!=null && !conformador.isEmpty()){
+        if(conformador!=null){
         //escribir en resultado final
         textAreaLog.append("EL CHASIS "+chasisBuscar+" LO CONFORMÓ\t"+conformador+"\n");
         //responsables sera de donde sacara los datos para escribir informe final.
@@ -153,8 +182,7 @@ public class Implementador implements Runnable{
 		}
        
         }else{
-        
-        //responsables.add(chasisBuscar+"\t"+"INEXISTENTE");
+        responsables.add(chasisBuscar+"\t"+"INEXISTENTE");
         textAreaLog.append("EL CHASIS "+chasisBuscar+" NO LO CONFORMÓ NADIE AÚN\n");
       //escribir en resultado final
        
@@ -174,7 +202,6 @@ public class Implementador implements Runnable{
          tiempo = TFin - TInicio; //Calculamos los milisegundos de diferencia
          textAreaLog.append("Tiempo de ejecución de filtrado de conformes: " + tiempo/1000+" Segundos\n");
 		return personas;
-		
          
 
 	}
@@ -193,32 +220,14 @@ public class Implementador implements Runnable{
 			return pipe;
 		
 	}
-	private ArrayList<String> eliminarRepetidos(ArrayList<String> repetidos,JTextArea area){
-		area.append("Eliminando repetidos....");
-		ArrayList<String>aux=new ArrayList<String>();
-		for(int i=0;i<repetidos.size();i++){
-			if(!aux.contains(repetidos.get(i))){
-				aux.add(repetidos.get(i));
-			}
-		}
-		
-		return aux;
-		
-	}
 	
-	int j=0;
+	
 	public void run() {
-		area.setDragEnabled(true);
-		LogTXT.setText("Proc "+(j+1)+" de "+(ruta.size()));
-		bar.setValue(0);
-		barQuery.setValue(0);
-		barCopia.setValue(0);
 		
 		//leer archivo
 		LeerArchivo lector=new LeerArchivo();
 		ArrayList<String>lineasViajeConf;
-		lineasViajeConf=lector.leer(ruta.get(j));
-		
+		lineasViajeConf=lector.leer(ruta);
 		ArrayList<Integer>pipe=entregarUbicacionPipes(lineasViajeConf, area);
 		
 		String chasis=null;
@@ -230,14 +239,14 @@ public class Implementador implements Runnable{
 		 bar.setBorderPainted(true);			 
 		 area.setAutoscrolls(true);
 			ArrayList<String>contenido=new ArrayList<String>();
-			int indiceXXX=0;
+			int j=0;
 			try{
 			 
 				
 				 
 				 if(filtro.equals("AMBOS")){
 					 for(int i=0;i<lineasViajeConf.size();i++){   
-					 indiceXXX=i;										//linea 209         a    226
+					 j=i;										//linea 209         a    226
 						chasis=lineasViajeConf.get(i).substring(pipe.get(pipe.size()-2)+1, pipe.get(pipe.size()-1));
 						area.append("LEYENDO "+lineasViajeConf.get(i)+"\n");
 						contenido.add(chasis) ;
@@ -245,7 +254,7 @@ public class Implementador implements Runnable{
 					 
 				 }else if(filtro.equals("CONCESIONARIO")){
 					 for(int i=0;i<lineasViajeConf.size();i++){
-					 indiceXXX=i;	
+					 j=i;	
 					 resFiltro=lineasViajeConf.get(i).substring(pipe.get(8)+1, pipe.get(9));
 					 if(resFiltro.equals("C")){
 					 //linea 209         a    226
@@ -258,7 +267,7 @@ public class Implementador implements Runnable{
 					 
 				 }else if(filtro.equals("SUCURSAL")){
 					 for(int i=0;i<lineasViajeConf.size();i++){
-					 indiceXXX=i;
+					 j=i;
 					 resFiltro=lineasViajeConf.get(i).substring(pipe.get(8)+1, pipe.get(9));
 					 if(resFiltro.equals("S")){                  //linea 209         a    226
 						chasis=lineasViajeConf.get(i).substring(pipe.get(pipe.size()-2)+1, pipe.get(pipe.size()-1));
@@ -272,7 +281,7 @@ public class Implementador implements Runnable{
 				 }
 			 
 			}catch(Exception e){
-				JOptionPane.showMessageDialog(null,"Error en el archivo origen en la linea "+indiceXXX+" está vacía o es más corta que la anterior, corríjala y luego reintente \n"+e.getLocalizedMessage());
+				JOptionPane.showMessageDialog(null,"Error en el archivo origen en la linea "+j+" está vacía o es más corta que la anterior, corríjala y luego reintente \n"+e.getLocalizedMessage());
 				System.exit(0);
 			}
 			
@@ -312,7 +321,7 @@ public class Implementador implements Runnable{
 			extension=ini.darExtension(rutasArchivos.get(i), rutaalaCarpeta);// obtiene la extension del archivo
 			area.append("\nOBTENIENDO LA EXTENSIÓN DE LOS ARCHIVOS....\n");
 			if(extension!=null){
-			rutasCompletas.add(rutasArchivos.get(i)+extension);// carga la ruta completa al archivo a copiar
+			rutasCompletas.add(rutasArchivos.get(i)+extension);// carga la ruta completa al archivo
 			area.append("\nGENERANDO RUTAS A BUSCAR.."+i+" de "+tamanioRutasArchivos+"\n");
 			}else{
 				log.escribirContinuacionUnaLinea(rutaDestino+"\\logNoOk.txt","No copiado "+rutasArchivos.get(i).substring(rutasArchivos.get(i).lastIndexOf("/")+1)+"\t porque el archivo no se encuentra en "+rutaalaCarpeta);
@@ -325,64 +334,37 @@ public class Implementador implements Runnable{
 			
 			}
 		area.append("\nPREPARANDOSE PARA COPIAR, POR FAVOR AGUARDE...\n");
-		ArrayList<String>repetidosNO=eliminarRepetidos(rutasCompletas, area);
-		
-		ini.copiarArchivosAruta(repetidosNO,rutaDestino, barCopia, area);//rutadestino no debe terminar con "/"
+		ini.copiarArchivosAruta(rutasCompletas,rutaDestino, barCopia, area);//rutadestino no debe terminar con "/"
 		if(	barCopia.getValue()==barCopia.getMaximum()){
 		//JOptionPane.showMessageDialog(null,"Proceso finalizado.\nPara más detalles, vea el LOG en su Carpeta de Destino.");
 		}else{
 		JOptionPane.showMessageDialog(null,"Proceso finalizado con errores.\nPara más detalles, vea el LOG en su Carpeta de Destino.");	
 		}
 		habilitarBotones();
-		
-		
-		////////////////////////////////////////////////LIBERAR MEMORIA///////////////////////////////////////////////
-		area.setText("");
-		
-		rutasCompletas=null;
-		rutasArchivos=null;
-		extension=null;
-		pipe=null;
-		lineasViajeConf=null;
-		System.gc();// llamando al garbage collector..
-		
-		
-		j++;
-		
-		if(j==ruta.size()){
-			try{
-				ArrayList<String>persona=null;
-					
-					// ACA PONER FUNCION DE BÚSQUEDA FINAL
-				persona=hacerBusquedaResponsableConformado(rutaOriginalAlviajconfTXT, rutaDestino+"\\logNoOk.txt", rutaDestino+"\\INFORME_FINAL.txt", barQuery, barCopia, area);
-				
-				rutaDestino=rutaDestino.replace('/','\\');
-				
-				for(int i=0;i<persona.size();i++){//generando .bat filtrador
-					//find "AMANDAT" d:\desktop\viajconf.txt  > d:\desktop\AMANDAT.txt
-					
-					persona.set(i,"find \""+persona.get(i).replaceAll(" ", "")+"\""+" \""+rutaDestino+"\\INFORME_FINAL.txt\" > \""+rutaDestino+"\\"+persona.get(i).replaceAll(" ", "")+".txt\"");
-				}
-				
-				EscribirArchivo escritor=new EscribirArchivo();
-				escritor.escribir(rutaDestino+"\\FILTRADOR.bat", persona);				
-				JOptionPane.showMessageDialog(null,"Proceso finalizado.\nPara más detalles, vea el LOG en "+rutaDestino);//su Carpeta de Destino.");
-				for(int i=0;i<ruta.size();i++){
-					File aBorrar=new File(ruta.get(i));
-					aBorrar.delete();
-				
-				}
-				ini.abrirDirectorio(rutaDestino);
-		
+		try{
+		ArrayList<String>persona=null;
 			
+			// ACA PONER FUNCION DE BÚSQUEDA FINAL
+		persona=hacerBusquedaResponsableConformado(ruta, rutaDestino+"\\logNoOk.txt", rutaDestino+"\\INFORME_FINAL.txt", barQuery, barCopia, area);
+		
+		rutaDestino=rutaDestino.replace('/','\\');
+		
+		for(int i=0;i<persona.size();i++){
+			//find "AMANDAT" d:\desktop\viajconf.txt  > d:\desktop\AMANDAT.txt
 			
+			persona.set(i,"find \""+persona.get(i).replaceAll(" ", "")+"\""+" \""+rutaDestino+"\\INFORME_FINAL.txt\" > \""+rutaDestino+"\\"+persona.get(i).replaceAll(" ", "")+".txt\"");
+		}
+		EscribirArchivo escritor=new EscribirArchivo();
+		escritor.escribir(rutaDestino+"\\FILTRADOR.bat", persona);
+		
+		JOptionPane.showMessageDialog(null,"Proceso finalizado.\nPara más detalles, vea el LOG en "+rutaDestino);//su Carpeta de Destino.");
+			
+			ini.abrirDirectorio(rutaDestino);
 		}catch(Exception e){
-			JOptionPane.showMessageDialog(null,"No se puede abrir el directorio\n"+e.getMessage());
+			
 		}
 		
-		}/*end if*/else{
-			run();
-		}
+		
 
 		
 		

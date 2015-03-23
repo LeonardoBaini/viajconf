@@ -2,7 +2,6 @@ package Clases;
 
 import java.io.*;//no olviden importar esta librería al inicio de su programa 
 import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.JOptionPane;
 
@@ -18,29 +17,20 @@ public class EscribirArchivo {
 /*
  * escribir sobre escribe el archivo dado
  */
-	
-	/*Para escribir a continuación hacer:
-	 * try 
-    {
-            BufferedWriter out = new BufferedWriter(new FileWriter(RutaAlArchivo, true));
-            
-            out.write(linea);
-            out.newLine();
-            
-            out.close();
-    }
-	 */
 	 public int escribir(String RutaAlArchivo,ArrayList<String> lista ) { 		 
 	int lineasTotalesEscritas=0;
 
-		 
+	 File f; 
+	 f = new File(RutaAlArchivo);   
+
+
+	 
 	 try{ 
+	 FileWriter w = new FileWriter(f);
 	 
-	 
-	 BufferedWriter bw = new BufferedWriter(new FileWriter(RutaAlArchivo, true)); 
+	 BufferedWriter bw = new BufferedWriter(w); 
 	
 	 for(int i=0;i<lista.size();i++){
-	
 	 bw.write(lista.get(i));
 	 bw.newLine();
 	 lineasTotalesEscritas++;
@@ -56,49 +46,20 @@ public class EscribirArchivo {
 
 
 	  } 
-	 public int escribirLista(String RutaAlArchivo,List lista ) { 		 
-			int lineasTotalesEscritas=0;
-
-			 
-
-
-			 
-			 try{ 
-			
-			 
-			
-			 BufferedWriter bw = new BufferedWriter(new FileWriter(RutaAlArchivo, true)); 
-			
-			 for(int i=0;i<lista.size();i++){
-			 bw.write(lista.get(i).toString());
-			 bw.newLine();
-			 lineasTotalesEscritas++;
-			  }
-			 
-			 bw.close(); 
-
-
-			 }catch(IOException e){
-				 JOptionPane.showConfirmDialog(null,"Error "+e.getMessage());
-			 };
-			return lineasTotalesEscritas; 
-
-
-			  } 
-
 
 
 
 public void escribirUnaLinea(String RutaAlArchivo,String linea ) { 		 
 	 
 
-	
+	 File f; 
+	 f = new File(RutaAlArchivo);   
+
 
 	
 	 try{ 
-	
-	 BufferedWriter bw = new BufferedWriter(new FileWriter(RutaAlArchivo, true)); 
-	 
+	 FileWriter w = new FileWriter(f);
+	 BufferedWriter bw = new BufferedWriter(w); 
 	 bw.write(linea);
 	 bw.close(); 
 
